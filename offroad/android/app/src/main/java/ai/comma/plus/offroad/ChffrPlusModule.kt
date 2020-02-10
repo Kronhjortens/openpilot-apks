@@ -283,6 +283,25 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
         promise.resolve((availableBlocks * blockSize).toString())
     }
 
+    @ReactMethod
+    fun getLastRouteName(promise: Promise) {
+        val dataDir = File("/data/media/0/realdata")
+        val files = dataDir.listFiles()
+        files.sortWith( Comparator { first, second ->
+            first.lastModified().compareTo(second.lastModified())
+        })
+
+        if (files.size > 0) {
+            val dongleId = ChffrPlusParams.readParam("DongleId")
+            val timeParts = files.last().name.split("--").toList()
+            timeParts.dropLast(1)
+            val timeStr = timeParts.joinToString("--")
+            promise.resolve("${dongleId}|${timeStr}")
+        } else {
+            promise.resolve(null)
+        }
+    }
+
     @Throws(GeneralSecurityException::class)
     private fun readPkcs1PrivateKey(pkcs1Bytes: ByteArray): PrivateKey {
         // We can't use Java internal APIs to parse ASN.1 structures, so we build a PKCS#8 key Java can understand
