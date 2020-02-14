@@ -3,6 +3,7 @@ import { AsyncStorage } from 'react-native';
 import * as Sentry from '@sentry/react-native';
 import { request as Request, devices as Devices } from '@commaai/comma-api';
 import ChffrPlus from '../../native/ChffrPlus';
+import Geocoder from '../../native/Geocoder';
 import { Params } from '../../config';
 
 export const ACTION_HOST_IS_SSH_ENABLED = 'ACTION_HOST_IS_SSH_ENABLED';
@@ -22,6 +23,7 @@ export function thermalDataChanged(thermalData) {
     return async (dispatch, getState) => {
         const oldThermal = getState().host.thermal;
         if (oldThermal.started === true && thermalData.started === false) {
+            Geocoder.requestLocationUpdate();
             dispatch(fetchDeviceStats());
             dispatch(updateUpdateIsAvailable());
             await dispatch(updateLastRouteName());
