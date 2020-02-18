@@ -285,8 +285,9 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
 
     @ReactMethod
     fun getLastRouteName(promise: Promise) {
-        val dataDir = File("/data/media/0/realdata")
+        val dataDir = File("/sdcard/realdata/")
         val files = dataDir.listFiles()
+
         if (files !== null) {
           files.sortWith( Comparator { first, second ->
               first.lastModified().compareTo(second.lastModified())
@@ -294,8 +295,7 @@ class ChffrPlusModule(val ctx: ReactApplicationContext) :
           if (files.size > 0) {
               val dongleId = ChffrPlusParams.readParam("DongleId")
               val timeParts = files.last().name.split("--").toList()
-              timeParts.dropLast(1)
-              val timeStr = timeParts.joinToString("--")
+              val timeStr = timeParts.dropLast(1).joinToString("--")
               promise.resolve("${dongleId}|${timeStr}")
           } else {
               promise.resolve(null)

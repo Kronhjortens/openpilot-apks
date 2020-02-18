@@ -111,7 +111,7 @@ const mapDispatchToProps = (dispatch) => ({
                 await Request.configure(token);
                 await Drives.setRouteRating(lastRouteName, rating);
             } catch(e) {
-                Logging.cloudLog('Failed to set route rating', { lastRouteName, rating });
+                Logging.cloudLog('Failed to set route rating', { lastRouteName, rating, e });
             }
         } else {
             Logging.cloudLog('Failed to get last route name', { rating });

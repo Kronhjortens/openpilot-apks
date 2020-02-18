@@ -22,6 +22,11 @@ export const ACTION_LAST_ROUTE_NAME_CHANGED = 'ACTION_LAST_ROUTE_NAME_CHANGED';
 export function thermalDataChanged(thermalData) {
     return async (dispatch, getState) => {
         const oldThermal = getState().host.thermal;
+        dispatch({
+            type: ACTION_THERMAL_DATA_CHANGED,
+            thermalData,
+        });
+
         if (oldThermal.started === true && thermalData.started === false) {
             Geocoder.requestLocationUpdate();
             dispatch(fetchDeviceStats());
@@ -29,10 +34,6 @@ export function thermalDataChanged(thermalData) {
             await dispatch(updateLastRouteName());
             dispatch(NavigationActions.navigate({ routeName: 'DriveRating' }));
         }
-        dispatch({
-            type: ACTION_THERMAL_DATA_CHANGED,
-            thermalData,
-        });
     }
 }
 
