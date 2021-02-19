@@ -126,11 +126,7 @@ class Settings extends Component {
 
     handlePressedResetCalibration = async () => {
         this.props.deleteParam(Params.KEY_CALIBRATION_PARAMS);
-        this.setState({ calibration: null });
-        Alert.alert('Reboot', 'Resetting calibration requires a reboot.', [
-            { text: 'Later', onPress: () => {}, style: 'cancel' },
-            { text: 'Reboot Now', onPress: () => ChffrPlus.reboot() },
-        ]);
+        this.props.deleteParam(Params.KEY_LIVE_PARAMETERS);
     }
 
     // handleChangedSpeedLimitOffset(operator) {
@@ -184,7 +180,7 @@ class Settings extends Component {
                 Version: version,
             },
         } = this.props;
-        const software = !!parseInt(isPassive) ? 'chffrplus' : 'openpilot';
+        const software = !!parseInt(isPassive) ? 'dashcam' : 'openpilot';
         let connectivity = 'Disconnected'
         if (wifiState.isConnected && wifiState.ssid) {
             connectivity = wifiState.ssid;
@@ -206,7 +202,7 @@ class Settings extends Component {
             },
             {
                 icon: Icons.network,
-                title: 'Network',
+                title: 'WiFi',
                 context: connectivity,
                 route: SettingsRoutes.NETWORK,
             },
@@ -455,6 +451,33 @@ class Settings extends Component {
         )
     }
 
+    calib_description(params){
+      var text = 'openpilot requires the device to be mounted within 4° left or right and within 5° up or down. openpilot is continuously calibrating, resetting is rarely required.';
+      if ((params == null) || (params == undefined)) {
+        var calib_json = null
+      } else {
+        var calib_json = JSON.parse(params);
+      }
+      if ((calib_json != null) && (calib_json.hasOwnProperty('calib_radians'))) {
+        var calibArr = (calib_json.calib_radians).toString().split(',');
+        var pi = Math.PI;
+        var pitch = parseFloat(calibArr[1]) * (180/pi)
+        var yaw = parseFloat(calibArr[2]) * (180/pi)
+        if (pitch > 0) {
+          var pitch_str = Math.abs(pitch).toFixed(1).concat('° up')
+        } else {
+          var pitch_str = Math.abs(pitch).toFixed(1).concat('° down')
+        }
+        if (yaw > 0) {
+          var yaw_str = Math.abs(yaw).toFixed(1).concat('° right')
+        } else {
+          var yaw_str = Math.abs(yaw).toFixed(1).concat('° left')
+        }
+        text = text.concat('\n\nYour device is pointed ', pitch_str, ' and ', yaw_str, '. ')
+      }
+      return text;
+    }
+
     renderDeviceSettings() {
         const {
             expandedCell,
@@ -468,10 +491,11 @@ class Settings extends Component {
             params: {
                 DongleId: dongleId,
                 Passive: isPassive,
+                CalibrationParams: calibrationParams,
             },
             isOffroad,
         } = this.props;
-        const software = !!parseInt(isPassive) ? 'chffrplus' : 'openpilot';
+        const software = !!parseInt(isPassive) ? 'dashcam' : 'openpilot';
         return (
             <View style={ Styles.settings }>
                 <View style={ Styles.settingsHeader }>
@@ -490,7 +514,7 @@ class Settings extends Component {
                             type='custom'
                             title='Camera Calibration'
                             iconSource={ Icons.calibration }
-                            description='The calibration algorithm is always active on the road facing camera. Resetting calibration is only advised when the device reports an invalid calibration alert or when the device is remounted in a different position.'
+                            description={ this.calib_description(calibrationParams) }
                             isExpanded={ expandedCell == 'calibration' }
                             handleExpanded={ () => this.handleExpanded('calibration') }>
                             <X.Button
@@ -507,7 +531,7 @@ class Settings extends Component {
                             type='custom'
                             title='Driver Camera View'
                             iconSource={ Icons.monitoring }
-                            description='Preview the driver facing camera to help optimize device mounting position for best driver monitoring experience. (offroad use only)'
+                            description='Preview the driver facing camera to help optimize device mounting position for best driver monitoring experience. (vehicle must be off)'
                             isExpanded={ expandedCell == 'driver_view_enabled' }
                             handleExpanded={ () => this.handleExpanded('driver_view_enabled') } >
                             <X.Button
@@ -609,7 +633,7 @@ class Settings extends Component {
             },
         } = this.props;
         const { expandedCell } = this.state;
-        const software = !!parseInt(isPassive) ? 'chffrplus' : 'openpilot';
+        const software = !!parseInt(isPassive) ? 'dashcam' : 'openpilot';
         return (
             <View style={ Styles.settings }>
                 <View style={ Styles.settingsHeader }>
@@ -631,10 +655,7 @@ class Settings extends Component {
                             iconSource={ Icons.developer }
                             descriptionExtra={
                               <X.Text color='white' size='tiny'>
-                                  Use features from the open source community that are not maintained or supported by comma.ai and have not been confirmed to meet the standard safety model. Be extra cautious when using these features:{'\n'}
-                                  * GM car port{'\n'}
-                                  * Toyota with DSU unplugged{'\n'}
-                                  * Pedal interceptor{'\n'}
+                                  Use features from the open source community that are not maintained or supported by comma.ai and have not been confirmed to meet the standard safety model. These features include community supported cars and community supported hardware. Be extra cautious when using these features.{'\n'}
                               </X.Text>
                             }
                             isExpanded={ expandedCell == 'communityFeatures' }
